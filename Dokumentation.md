@@ -1,15 +1,19 @@
 # 📄 Penetration Test Report – Machine 1: Heal
+
 ## 🧠 Management Summary
+
 In this penetration test, we targeted the active HackTheBox machine "Heal", which meets the required difficulty level (Medium) and appears to have an HTTP service running on port 80. The objective was to compromise the machine and retrieve the user flag, documenting all identified vulnerabilities and providing remediation recommendations.
 
 ![1744655136679](image/Dokumentation/1744655136679.png)
 
 ## 🌐 Network Setup
+
 The VPN tunnel to HTB was established using OpenVPN on Kali Linux:
 
 ```bash
 sudo openvpn Desktop/lab_lyfe691.ovpn
 ```
+
 The connection successfully initialized, assigning the tun interface the IP 10.10.14.234.
 
 ```shell
@@ -25,12 +29,12 @@ Get:6 http://mirror.init7.net/kali kali-rolling/non-free amd64 Packages [204 kB]
 Get:7 http://mirror.init7.net/kali kali-rolling/non-free amd64 Contents (deb) [914 kB]
 Get:8 http://mirror.init7.net/kali kali-rolling/non-free-firmware amd64 Packages [10.6 kB]
 Get:9 http://mirror.init7.net/kali kali-rolling/non-free-firmware amd64 Contents (deb) [24.3 kB]
-Fetched 74.0 MB in 11s (7,045 kB/s)                                         
+Fetched 74.0 MB in 11s (7,045 kB/s)                                       
 963 packages can be upgraded. Run 'apt list --upgradable' to see them.
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
 └─$ sudo apt install openvpn -yd
-Upgrading:                      
+Upgrading:                    
   openvpn
 
 Summary:
@@ -41,7 +45,7 @@ Summary:
 Get:1 http://mirror.init7.net/kali kali-rolling/main amd64 openvpn amd64 2.6.14-1 [662 kB]
 Fetched 662 kB in 0s (2,086 kB/s)
 Download complete and in download only mode
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
 └─$ openvpn --version
 OpenVPN 2.6.13 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] [DCO]
@@ -50,11 +54,11 @@ DCO version: N/A
 Originally developed by James Yonan
 Copyright (C) 2002-2024 OpenVPN Inc <sales@openvpn.net>
 Compile time defines: enable_async_push=no enable_comp_stub=no enable_crypto_ofb_cfb=yes enable_dco=yes enable_dco_arg=yes enable_debug=yes enable_dependency_tracking=no enable_dlopen=unknown enable_dlopen_self=unknown enable_dlopen_self_static=unknown enable_fast_install=needless enable_fragment=yes enable_iproute2=no enable_libtool_lock=yes enable_lz4=yes enable_lzo=yes enable_maintainer_mode=no enable_management=yes enable_option_checking=no enable_pam_dlopen=no enable_pedantic=no enable_pkcs11=yes enable_plugin_auth_pam=yes enable_plugin_down_root=yes enable_plugins=yes enable_port_share=yes enable_selinux=no enable_shared=yes enable_shared_with_static_runtimes=no enable_silent_rules=no enable_small=no enable_static=yes enable_strict=no enable_strict_options=no enable_systemd=yes enable_unit_tests=no enable_werror=no enable_win32_dll=yes enable_wolfssl_options_h=yes enable_x509_alt_username=yes with_aix_soname=aix with_crypto_library=openssl with_gnu_ld=yes with_mem_check=no with_openssl_engine=auto with_sysroot=no
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
-└─$ ls                             
+└─$ ls                           
 Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
 └─$ openvpn --version
 OpenVPN 2.6.13 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] [DCO]
@@ -63,7 +67,7 @@ DCO version: N/A
 Originally developed by James Yonan
 Copyright (C) 2002-2024 OpenVPN Inc <sales@openvpn.net>
 Compile time defines: enable_async_push=no enable_comp_stub=no enable_crypto_ofb_cfb=yes enable_dco=yes enable_dco_arg=yes enable_debug=yes enable_dependency_tracking=no enable_dlopen=unknown enable_dlopen_self=unknown enable_dlopen_self_static=unknown enable_fast_install=needless enable_fragment=yes enable_iproute2=no enable_libtool_lock=yes enable_lz4=yes enable_lzo=yes enable_maintainer_mode=no enable_management=yes enable_option_checking=no enable_pam_dlopen=no enable_pedantic=no enable_pkcs11=yes enable_plugin_auth_pam=yes enable_plugin_down_root=yes enable_plugins=yes enable_port_share=yes enable_selinux=no enable_shared=yes enable_shared_with_static_runtimes=no enable_silent_rules=no enable_small=no enable_static=yes enable_strict=no enable_strict_options=no enable_systemd=yes enable_unit_tests=no enable_werror=no enable_win32_dll=yes enable_wolfssl_options_h=yes enable_x509_alt_username=yes with_aix_soname=aix with_crypto_library=openssl with_gnu_ld=yes with_mem_check=no with_openssl_engine=auto with_sysroot=no
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
 └─$ openvpn Desktop/lab_lyfe691.ovpn 
 2025-04-14 13:43:12 WARNING: Compression for receiving enabled. Compression has been used in the past to break encryption. Sent packets are not compressed unless "allow-compression yes" is also set.
@@ -103,7 +107,7 @@ Compile time defines: enable_async_push=no enable_comp_stub=no enable_crypto_ofb
 2025-04-14 13:43:14 ROUTE6_GATEWAY fe80::2 IFACE=eth0
 2025-04-14 13:43:14 ERROR: Cannot ioctl TUNSETIFF tun: Operation not permitted (errno=1)
 2025-04-14 13:43:14 Exiting due to fatal error
-                                                                             
+                                                                           
 ┌──(kali㉿kali)-[~]
 └─$ sudo openvpn Desktop/lab_lyfe691.ovpn
 2025-04-14 13:43:56 WARNING: Compression for receiving enabled. Compression has been used in the past to break encryption. Sent packets are not compressed unless "allow-compression yes" is also set.
@@ -160,12 +164,14 @@ Compile time defines: enable_async_push=no enable_comp_stub=no enable_crypto_ofb
 ```
 
 ## 🔍 Target Discovery
+
 Target IP of Heal: 10.10.11.46
 Initial port scan was performed to verify HTTP access:
 
 ```bash
 nmap -p 80 10.10.11.46
 ```
+
 Result:
 
 ```shell
@@ -182,7 +188,8 @@ Nmap done: 1 IP address (1 host up) scanned in 2.33 seconds
 ![1744655269309](image/Dokumentation/1744655269309.png)
 
 ## 🔧 DNS Configuration for heal.htb
-The server on 10.10.11.46 responded with an HTTP redirect to http://heal.htb: 
+
+The server on 10.10.11.46 responded with an HTTP redirect to http://heal.htb:
 
 ```shell
 ┌──(kali㉿kali)-[~]
@@ -204,6 +211,7 @@ Command:
 ```bash
 sudo nano /etc/hosts
 ```
+
 Added line:
 
 ```bash
@@ -215,11 +223,13 @@ This allowed us to access the web interface through the correct virtual host.
 ![1744656432925](image/Dokumentation/1744656432925.png)
 
 ## 🌐 Initial Web Recon – heal.htb
+
 We confirmed the website was using a React-based frontend by checking the HTML source:
 
 ```bash
 curl http://heal.htb
 ```
+
 The response included this section:
 
 ```html
@@ -233,7 +243,7 @@ The response included this section:
       name="description"
       content="Web site created using create-react-app"
     />
-    
+  
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -266,12 +276,20 @@ The response included this section:
   <script src="/static/js/bundle.js"></script><script src="/static/js/0.chunk.js"></script><script src="/static/js/main.chunk.js"></script></body>
 </html>
 
-```	
+```
+
+pulling it up on firefox, it shows a login page meaning that theres probably a backend:
+
+![1744660028161](image/Dokumentation/1744660028161.png)
+
+Knowing that i tested the login page and it showed an error so i pulled up the console to see the error better: 
+
+![1744660324409](image/Dokumentation/1744660324409.png)
+
+The error `Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://api.heal.htb/signin.` indicates that the site is trying to make a request to an API backend.
+
 This indicates the site was likely built using Create React App, meaning:
 
 - It may talk to an API backend
 - JS must be enabled to see real content
 - There could be hidden paths or dev leftovers in the JS bundles
-
-
-
