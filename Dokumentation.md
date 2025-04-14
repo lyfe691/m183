@@ -181,3 +181,97 @@ Nmap done: 1 IP address (1 host up) scanned in 2.33 seconds
 
 ![1744655269309](image/Dokumentation/1744655269309.png)
 
+## 🔧 DNS Configuration for heal.htb
+The server on 10.10.11.46 responded with an HTTP redirect to http://heal.htb: 
+
+```shell
+┌──(kali㉿kali)-[~]
+└─$ curl -I http://10.10.11.46
+
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.18.0 (Ubuntu)
+Date: Mon, 14 Apr 2025 18:38:43 GMT
+Content-Type: text/html
+Content-Length: 178
+Connection: keep-alive
+Location: http://heal.htb/
+```
+
+ To resolve the hostname locally, we edited the /etc/hosts file to point heal.htb to the machine's IP.
+
+Command:
+
+```bash
+sudo nano /etc/hosts
+```
+Added line:
+
+```bash
+10.10.11.46    heal.htb
+```
+
+This allowed us to access the web interface through the correct virtual host.
+
+![1744656432925](image/Dokumentation/1744656432925.png)
+
+## 🌐 Initial Web Recon – heal.htb
+We confirmed the website was using a React-based frontend by checking the HTML source:
+
+```bash
+curl http://heal.htb
+```
+The response included this section:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="/manifest.json" />
+    <!--
+      Notice the use of  in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Heal</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  <script src="/static/js/bundle.js"></script><script src="/static/js/0.chunk.js"></script><script src="/static/js/main.chunk.js"></script></body>
+</html>
+
+```	
+This indicates the site was likely built using Create React App, meaning:
+
+- It may talk to an API backend
+- JS must be enabled to see real content
+- There could be hidden paths or dev leftovers in the JS bundles
+
+
+
