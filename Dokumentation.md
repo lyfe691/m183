@@ -173,6 +173,19 @@ so, jetzt kann ich die survey page sehen:
 
 ![alt text](Screenshot_2025-04-18_21_05_21.png)
 
+ich habe das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir sagrt das es ein admin gibt, `ralph@heal.htb`. 
 
+![alt text](Screenshot_2025-04-19_15_13_54.png)
 
+Das sagt mir das es auch einen Admin login oder so geben sollte. Deswegen habe ich mich entschieden einfach mal /admin zu machen um zu sehen ob es etwas gibt: 
+
+![alt text](image-1.png)
+
+wie man sehen kann hat es ein admin panel, aber da ich die login daten nicht weis muss ich einen weg finden um sie herauszufinden.
+
+## Ralphs password
+
+![auth](image-2.png)
+
+![token: ey](image-3.png)
 
