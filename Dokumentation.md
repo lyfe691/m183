@@ -25,6 +25,7 @@ Das war erfoglreich wie man auf der HTB website sehen kann:
 ## Target Discovery
 
 Die target ip ist: 10.10.11.46
+
 Um sicherzustellen, dass ein Dienst auf Port 80 aktiv ist, habe ich einen nmap scan durchgeführt:
 
 ```bash
@@ -129,7 +130,7 @@ x-content-type-options: nosniff
 Server: nginx/1.18.0 (Ubuntu)
 ```
 
-## 🔍 Looking at what i have found
+## Looking at what i have found
 
 Da ich jetzt zugriff auf die api habe, kann ich die bisher gefundenen sahcen testen. Das login und reigster der app funktionieren wie erwartet.
 
@@ -147,6 +148,30 @@ survey page:
 
 ![1744665981729](image/Dokumentation/1744665981729.png)
 
+## Survey inspection
+
+Auf der survey page habe ich den button gehovert und es zeigte eine php page und eine neue sub domain (`take-survey.heal.htb`) an (im unterricht haben wir das mit php angeschaut und dachte mir das ich xss oder so probieren könnte). 
+
+![alt text](indexphpsh.png)
+
+wie immer, damit ich die seite ansehen kann habe ich den Eintrag in der Datei /etc/hosts hinzugefügt.
+
+```bash
+sudo nano /etc/hosts
+```
+
+added line:
+
+```bash
+10.10.11.46    take-survey.heal.htb
+```
+
+![alt text](Screenshot_2025-04-18_20_53_22.png)
+
+
+so, jetzt kann ich die survey page sehen: 
+
+![alt text](Screenshot_2025-04-18_21_05_21.png)
 
 
 
