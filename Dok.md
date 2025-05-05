@@ -1061,7 +1061,7 @@ cat /root/root.txt
 
 ![1746479136549](image/Cypher/1746479136549.png)
 
-![alt text](Screenshot 2025-05-05 at 15-53-50 Hack The Box Hack The Box.png)
+![alt text](a.png)
 
 HTB‑Link: [https://www.hackthebox.com/achievement/machine/2350832/650](https://www.hackthebox.com/achievement/machine/2350832/650)
 
