@@ -1,9 +1,5 @@
 # Machine 1: Heal
 
-## Management Summary
-
-In this penetration test, we targeted the active HackTheBox machine "Heal", which meets the required difficulty level (Medium) and appears to have an HTTP service running on port 80. The objective was to compromise the machine and retrieve the user flag, documenting all identified vulnerabilities and providing remediation recommendations.
-
 ![1744655136679](image/Dokumentation/1744655136679.png)
 
 ## Network Setup
