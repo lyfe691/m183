@@ -930,7 +930,6 @@ Direkt auf `http://cypher.htb` zeigt sich eine Seite mit Login‑Maske.
 
 ![alt text](Screenshot_2025-05-05_16_06_14.png)
 
-![alt text](Screenshot_2025-05-05_16_06_14.png)
 
 Wir testen `dirsearch`, um weitere Pfade zu finden:
 
