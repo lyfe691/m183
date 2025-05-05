@@ -125,7 +125,8 @@ root@cypher:/# id
 uid=0(root) gid=0(root)
 ```
 
-/home/kali/Pictures/Screenshot_2025-05-05_15_50_40.png
+![alt text](Screenshot_2025-05-05_15_50_40.png)
+
 ------------------------------------------------------
 
 7. Flags
