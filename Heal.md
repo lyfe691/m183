@@ -1,5 +1,24 @@
 # Machine 1: Heal
 
+## 🔹 Management Summary – Heal
+
+Im Rahmen dieses Penetrationstests wurde die HTB-Maschine Heal (Schwierigkeit: Medium) vollständig kompromittiert.
+Ziel war es, Schwachstellen innerhalb einer Webapplikation zu identifizieren, auszunutzen und schlussendlich Root-Rechte auf dem System zu erlangen.
+
+Der Angriff erfolgte in mehreren Schritten:
+
+- Recon identifizierte mehrere Subdomains und ein Rails‑Backend mit Path‑Traversal‑Schwachstelle.
+
+- Über einen JWT‑Token Leak und Directory Traversal konnte die SQLite‑Datenbank exfiltriert und Passwort-Hashes extrahiert werden.
+
+- Durch Credential Reuse erlangten wir Admin‑Zugriff auf LimeSurvey.
+
+- Ein bekannter RCE-Exploit wurde verwendet, um eine Shell zu erhalten.
+
+- Root-Zugriff erfolgte über eine falsch konfigurierte Consul‑Instanz via HTTP API.
+
+Alle Schwachstellen wurden nachvollziehbar dokumentiert, mit technischen Details, Screenshots und empfohlenen Gegenmassnahmen.
+
 ![1744655136679](image/Dokumentation/1744655136679.png)
 
 ## Network Setup

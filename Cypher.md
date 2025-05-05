@@ -1,5 +1,19 @@
 # Maschine 2: Cypher
 
+## 🔹 Management Summary – Cypher
+Bei der HTB-Maschine Cypher (Schwierigkeit: Medium) wurde ein erfolgreicher Angriff durchgeführt, der zu einer vollständigen Kompromittierung inklusive Root-Zugriff führte.
+
+Die Sicherheitslücken lagen primär im Umgang mit Neo4j und unsicheren APOC-Funktionen:
+
+- Die Webanwendung zeigte Schwächen bei der Eingabevalidierung und war anfällig für Cypher-Injection.
+
+- Über LOAD CSV konnte ein Hash aus der Datenbank exfiltriert werden.
+
+- Anschliessend wurde durch eine unsichere APOC-Prozedur (getUrlStatusCode) eine Remote Code Execution erzielt.
+
+- Nach dem initialen Zugriff als neo4j wurde Root-Rechte über eine lokal auffindbare SUID‑Shell erlangt.
+
+
 ## 1. Netzwerkanbindung
 
 Wie immer starten wir mit der Verbindung zum HTB‑Netzwerk via OpenVPN:
